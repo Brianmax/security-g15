@@ -37,13 +37,9 @@ public class JwtService {
 
     public boolean isTokenValid(String token)
     {
-        return isTokenExpired(token);
-    }
-
-    public boolean isTokenExpired(String token)
-    {
         Claims claims = extractClaims(token);
-        return claims.getExpiration().before(new Date()); // true si token expiro
+        return !claims.getExpiration().before(new Date()); // true si el token es valido\
+        //             25             antes que 20 // false
     }
 
     private Claims extractClaims(String token)

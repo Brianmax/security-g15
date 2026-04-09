@@ -26,6 +26,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("User not found: " + username);
         }
         UserEntity userEntity = userOptional.get();
-        return new User(userEntity.getUsername(), null, new ArrayList<>());
+        return new User(userEntity.getUsername(), userEntity.getPassword(), new ArrayList<>());
     }
 }
