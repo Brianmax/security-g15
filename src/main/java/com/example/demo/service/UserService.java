@@ -34,6 +34,12 @@ public class UserService {
         UserEntity user = new UserEntity();
         user.setUsername(request.getUsername());
         user.setPassword(new BCryptPasswordEncoder().encode(request.getPassword()));
+        RoleEntity role = roleRepository.findByRoleName(request.getRole()).orElse(null);
+        if(role == null) {
+            throw new RuntimeException("Role not found with name: " + request.getRole());
+        } else {
+            user.setRole(role);
+        }
         return toResponse(userRepository.save(user));
     }
 

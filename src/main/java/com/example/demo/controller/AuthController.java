@@ -3,6 +3,8 @@ package com.example.demo.controller;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
+import com.example.demo.model.UserEntity;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.service.JwtService;
 import com.example.demo.service.UserService;
 import jakarta.validation.Valid;
@@ -23,17 +25,20 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtService jwtService) {
+    public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtService jwtService, UserRepository userRepository) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         userService.save(request);
-        String token = jwtService.generateToken(request.getUsername());
+        String username = request.getUsername();
+        String token = jwtService.generateToken(username, getUserRole(username));
         return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token));
     }
 
@@ -43,9 +48,18 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
         if (auth.isAuthenticated()) {
-            String token = jwtService.generateToken(request.getUsername());
+            String username = request.getUsername();
+            String token = jwtService.generateToken(username, getUserRole(username));
             return ResponseEntity.ok(new AuthResponse(token));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    private String getUserRole(String username) {
+        UserEntity userEntity = userRepository.findByUsername(username).orElse(null);
+        if(userEntity == null) {
+            return "GUEST";
+        }
+        return userEntity.getRole().getRoleName();
     }
 }
